@@ -1,0 +1,20 @@
+{
+	"name":"Voter",
+	"slug":"obsivote",
+	"nav":true,
+	"admin":true,
+	"author":"Eywek",
+	"version":"0.1.0",
+	"apiID":-1,
+	"useEvents":true,
+	"permissions" : {
+		"available" : ["VOTE_SHOW_REWARDS", "VOTE_SHOW_RANKING", "VOTE"],
+		"default" : {
+			"0" : ["VOTE_SHOW_RANKING", "VOTE_SHOW_REWARDS", "VOTE"],
+			"2" : ["VOTE_SHOW_RANKING", "VOTE_SHOW_REWARDS", "VOTE"]
+		}
+	},
+	"requirements" : {
+		"CMS" : ">= 1.0.0"
+	}
+}
