@@ -1,6 +1,11 @@
 <?php
 class VoterController extends ObsivoteAppController {
 
+  /*public function beforeFilter() {
+    parent::beforeFilter();
+    $this->Security->unlockedActions = array('config');
+  }*/
+
     public function index() {
       $this->loadModel('Obsivote.VoteConfiguration');
       $search = $this->VoteConfiguration->find('first');
@@ -346,7 +351,7 @@ class VoterController extends ObsivoteAppController {
 			 	 ==== */
 			if($config['rewards_type'] == 1) { // toutes les récompenses
 
-				$rewards = unserialize($config['VoteConfiguration']['rewards']); // on récupére la liste
+				$rewards = unserialize($config['rewards']); // on récupére la liste
 
 				$this->getEventManager()->dispatch(new CakeEvent('beforeRecieveRewards', $this, $rewards)); // on le passe à l'event
 
@@ -355,7 +360,7 @@ class VoterController extends ObsivoteAppController {
 					if($value['type'] == 'server') { // si c'est une commande serveur
 
 						$server = $this->executeServerReward($config, $user, $value);
-						if($server) {
+						if($server === true) {
 
 							$rewardsSended[] = $value['name'];
 
@@ -377,11 +382,11 @@ class VoterController extends ObsivoteAppController {
 
 				}
 
-				$return = $this->Lang->get('VOTE__VOTE_SUCCESS').' !';
+				$return = 'Vous avez bien récupéré votre récompense ! ';
         if($moneyToAdd !== false) {
           $return .= 'Vous avez été crédité de '.$moneyToAdd.' points boutique !';
         }
-			 	if(!empty($success_msg)) {
+			 	if(!empty($rewardsSended)) {
 					$return .= $this->Lang->get('VOTE__REWARDS_TITLE').' : ';
 					$return .= '<b>'.implode('</b>, <b>', $rewardsSended).'</b>.';
 			 }
@@ -404,7 +409,7 @@ class VoterController extends ObsivoteAppController {
 			if($rewards[$reward]['type'] == 'server') { // si c'est une commande serveur
 
 				$server = $this->executeServerReward($config, $user, $rewards[$reward]);
-				if($server) {
+				if($server === true) {
 
           $return = $this->Lang->get('VOTE__MESSAGE_VOTE_SUCCESS_REWARD').' : <b>'.$rewards[$reward]['name'].'</b>.';
           if($moneyToAdd !== false) {
@@ -513,11 +518,11 @@ class VoterController extends ObsivoteAppController {
 
         if($this->request->is('post')) {
           if(!empty($this->request->data['server_id']) AND !empty($this->request->data['vote_url']) AND !empty($this->request->data['time_vote']) AND !empty($this->request->data['out_url']) AND $this->request->data['rewards_type'] == '0' OR $this->request->data['rewards_type'] == '1') {
-            if(!empty($this->request->data['rewards'][0]['name']) && $this->request->data['rewards'][0]['name'] != "undefined" && !empty($this->request->data['rewards'][0]['type']) && $this->request->data['rewards'][0]['type'] != "undefined") {
+            //if(!empty($this->request->data['rewards'][0]['name']) && $this->request->data['rewards'][0]['name'] != "undefined" && !empty($this->request->data['rewards'][0]['type']) && $this->request->data['rewards'][0]['type'] != "undefined") {
 
               $this->loadModel('Obsivote.VoteConfiguration');
 
-              if($this->request->data['rewards_type'] == 0) {
+/*              if($this->request->data['rewards_type'] == 0) {
                 foreach ($this->request->data['rewards'] as $key => $value) {
                   if(!isset($value['proba']) || empty($value['proba'])) {
                     echo $this->Lang->get('ERROR__FILL_ALL_FIELDS').'|false';
@@ -525,7 +530,7 @@ class VoterController extends ObsivoteAppController {
                   }
                 }
               }
-
+*/
               $rewards = serialize($this->request->data['rewards']);
 
               $vote = $this->VoteConfiguration->find('first');
@@ -535,11 +540,12 @@ class VoterController extends ObsivoteAppController {
                   $this->VoteConfiguration->create();
               }
               $this->VoteConfiguration->set(array(
-                  'rewards_type' => $this->request->data['rewards_type'],
-                  'rewards' => $rewards,
-                  'vote_url' => $this->request->data['vote_url'],
-                  'out_url' => $this->request->data['out_url'],
-                  'server_id' => $this->request->data['server_id']
+                'time_vote' => $this->request->data['time_vote'],
+                'rewards_type' => $this->request->data['rewards_type'],
+                'rewards' => $rewards,
+                'vote_url' => $this->request->data['vote_url'],
+                'out_url' => $this->request->data['out_url'],
+                'server_id' => $this->request->data['server_id']
               ));
               $this->VoteConfiguration->save();
 
@@ -547,9 +553,9 @@ class VoterController extends ObsivoteAppController {
 
               $this->Session->setFlash($this->Lang->get('VOTE__CONFIGURATION_SUCCESS'), 'default.success');
               echo json_encode(array('statut' => true, 'msg' => $this->Lang->get('VOTE__CONFIGURATION_SUCCESS')));
-            } else {
+            /*} else {
                 echo json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')));
-            }
+            }*/
           } else {
               echo json_encode(array('statut' => false, 'msg' => $this->Lang->get('ERROR__FILL_ALL_FIELDS')));
           }
@@ -563,7 +569,8 @@ class VoterController extends ObsivoteAppController {
 
     function getMonthKit() {
       $this->autoRender = false;
-      if($this->isConnected && !empty($this->User->getKey('obsivote-kit_to_get'))) {
+      $kit_to_get = $this->User->getKey('obsivote-kit_to_get');
+      if($this->isConnected && !empty($kit_to_get)) {
 
         $pos = $this->User->getKey('obsivote-kit_to_get');
         $kit_name = array_keys(Configure::read('Obsivote.kits'))[($pos-1)];
