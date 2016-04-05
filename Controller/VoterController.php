@@ -190,16 +190,24 @@ class VoterController extends ObsivoteAppController {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER,1); // stock la response dans une variable
             curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
             curl_setopt($ch, CURLOPT_PORT, 80); // set port 80
-            curl_setopt($ch, CURLOPT_TIMEOUT, 15); //  timeout curl à 15 secondes.
+            curl_setopt($ch, CURLOPT_TIMEOUT, 2); //  timeout curl à 15 secondes.
 
             curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+
             $result=curl_exec($ch);
+            $error = curl_errno($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
 
-            $str = substr($result, strpos($result, 'Clic Sortant'), 20);
-            $out = filter_var($str, FILTER_SANITIZE_NUMBER_INT);
-            $array = array($out, $out-1, $out-2, $out-3, $out+1, $out+2, $out+3);
+            if($result !== false) {
+              $str = substr($result, strpos($result, 'Clic Sortant'), 20);
+              $out = filter_var($str, FILTER_SANITIZE_NUMBER_INT);
+              $array = array($out, $out-1, $out-2, $out-3, $out+1, $out+2, $out+3);
+            } else {
+              $this->log('RPG-Paradize check out error ('.$error.') : HTTP CODE : '.$code);
+            }
 
-            if(in_array($this->request->data['out'], $array)) {
+            if($code != 200 || $result === false || in_array($this->request->data['out'], $array)) {
 
               $this->Session->write('vote.out', true);
               echo json_encode(array('statut' => true, 'msg' =>$this->Lang->get('VOTE__STEP_3_SUCCESS')));
