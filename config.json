@@ -3,6 +3,8 @@
 	"slug":"obsivote",
 	"nav":true,
 	"admin":true,
+	"admin_route":"/admin/Obsivote",
+  "admin_name":"Vote",
 	"author":"Eywek",
 	"version":"0.1.0",
 	"apiID":-1,
