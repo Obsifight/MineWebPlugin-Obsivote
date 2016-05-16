@@ -5,3 +5,5 @@ Router::connect('/voter', array('controller' => 'voter', 'action' => 'index', 'p
 Router::connect('/voter/*', array('controller' => 'voter', 'action' => 'index', 'plugin' => 'obsivote'));
 
 Router::connect('/admin/Obsivote/*', array('controller' => 'voter', 'action' => 'index', 'plugin' => 'obsivote', 'prefix' => 'admin'));
+
+Router::connect('/obsiapi/vote/*', array('controller' => 'voter', 'action' => 'api', 'plugin' => 'obsivote'));

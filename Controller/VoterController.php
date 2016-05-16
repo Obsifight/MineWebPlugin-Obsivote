@@ -6,6 +6,34 @@ class VoterController extends ObsivoteAppController {
     $this->Security->unlockedActions = array('config');
   }*/
 
+  public function api($username) {
+
+    $this->autoRender = false;
+
+    $this->loadModel('Obsivote.Vote');
+    $user_id = $this->User->getFromUser('id', $username);
+    $get_last_vote = $this->Vote->find('first', array('conditions' => array('user_id' => $user_id)));
+
+    if(!empty($get_last_vote['Vote']['created'])) {
+      $now = time();
+      $last_vote = ($now - strtotime($get_last_vote['Vote']['created']))/60;
+    } else {
+      $last_vote = null;
+    }
+
+    $this->loadModel('Obsivote.VoteConfiguration');
+    $config = $this->VoteConfiguration->find('first');
+
+    $time_vote = $config['VoteConfiguration']['time_vote'];
+
+    if(empty($last_vote) OR $last_vote > $time_vote) {
+      echo '1';
+      return;
+    }
+    echo '0';
+
+  }
+
     public function index() {
       $this->loadModel('Obsivote.VoteConfiguration');
       $search = $this->VoteConfiguration->find('first');
