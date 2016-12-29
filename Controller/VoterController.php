@@ -6,38 +6,50 @@ class VoterController extends ObsivoteAppController {
     $this->Security->unlockedActions = array('config');
   }*/
 
-  public function api($username) {
-
+  public function getPositionFromRPG() {
     $this->autoRender = false;
+    $this->response->type('json');
 
-    if(!file_exists(ROOT.DS.'apivote-'.$username)) {
+    $this->loadModel('Obsivote.VoteConfiguration');
+    $config = $this->VoteConfiguration->find('first');
 
-      $this->loadModel('Obsivote.Vote');
-      $user_id = $this->User->getFromUser('id', $username);
-      $get_last_vote = $this->Vote->find('first', array('conditions' => array('user_id' => $user_id)));
+    $url = $config['VoteConfiguration']['out_url'];
 
-      if(!empty($get_last_vote['Vote']['created'])) {
-        $now = time();
-        $last_vote = ($now - strtotime($get_last_vote['Vote']['created']))/60;
-      } else {
-        $last_vote = null;
-      }
+    $user_agent = 'Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1'; // simule Firefox 4.
+      $header[0] = "Accept: text/xml,application/xml,application/xhtml+xml,";
+      $header[0] .= "text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5";
+      $header[] = "Cache-Control: max-age=0";
+      $header[] = "Connection: keep-alive";
+      $header[] = "Keep-Alive: 300";
+      $header[] = "Accept-Charset: utf-8";
+      $header[] = "Accept-Language: fr"; // langue fr.
+      $header[] = "Pragma: "; // Simule un navigateur
 
-      $this->loadModel('Obsivote.VoteConfiguration');
-      $config = $this->VoteConfiguration->find('first');
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url); // l'url visité
+    curl_setopt($ch, CURLOPT_FAILONERROR, 1);// Gestion d'erreur
+    //curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // autorise la redirection
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER,1); // stock la response dans une variable
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_PORT, 80); // set port 80
+    curl_setopt($ch, CURLOPT_TIMEOUT, 2); //  timeout curl à 15 secondes.
 
-      $time_vote = $config['VoteConfiguration']['time_vote'];
+    curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
 
-      if(empty($last_vote) OR $last_vote > $time_vote) {
-        echo '1';
-        return;
-      }
-      echo '0';
+    $result=curl_exec($ch);
+    $error = curl_errno($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-    } else {
-      echo file_get_contents(ROOT.DS.'apivote-'.$username);
+    if(!$result) {
+      $this->log('RPG-Paradize check out error ('.$error.') : HTTP CODE : '.$code);
+      return $this->response->body(json_encode(array('status' => false)));
     }
 
+    $position = substr($result, strpos($result, 'Position'), 20);
+    $position = filter_var($position, FILTER_SANITIZE_NUMBER_INT);
+
+    return $this->response->body(json_encode(array('status' => true, 'position' => intval($position))));
   }
 
     public function index() {
