@@ -540,7 +540,7 @@ class VoterController extends ObsivoteAppController {
     }
 
     public function admin_index() {
-      if($this->isConnected AND $this->User->isAdmin()) {
+      if($this->isConnected AND $this->Permissions->can('MANAGE_VOTE')) {
         $this->layout = "admin";
 
         $this->loadModel('Obsivote.VoteConfiguration');
@@ -568,7 +568,7 @@ class VoterController extends ObsivoteAppController {
 
     public function config() {
       $this->autoRender = false;
-      if($this->isConnected AND $this->User->isAdmin()) {
+      if($this->isConnected AND $this->Permissions->can('MANAGE_VOTE')) {
 
         if($this->request->is('post')) {
           if(!empty($this->request->data['server_id']) AND !empty($this->request->data['vote_url']) AND !empty($this->request->data['time_vote']) AND !empty($this->request->data['out_url']) AND $this->request->data['rewards_type'] == '0' OR $this->request->data['rewards_type'] == '1') {

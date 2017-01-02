@@ -57,5 +57,6 @@
 
   "PERMISSIONS__VOTE_SHOW_REWARDS": "Voir les r\u00e9compenses disponibles",
   "PERMISSIONS__VOTE_SHOW_RANKING": "Voir le classement des voteurs",
-  "PERMISSIONS__VOTE": "Voter"
+  "PERMISSIONS__VOTE": "Voter",
+  "PERMISSIONS__MANAGE_VOTE": "Gérer la configuration des votes"
 }
